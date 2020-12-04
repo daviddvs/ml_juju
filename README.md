@@ -1,1 +1,1 @@
-# ml_juju
+# Juju application for ML-NFV-EC
