@@ -8,10 +8,12 @@ sudo snap install microk8s --classic
 # Run the following 2 commands to use microk8s without sudo
 sudo usermod -a -G microk8s davidf
 sudo chown -f -R davidf ~/.kube
+# Reload bash terminal
 microk8s.enable dns storage # enable these two addons
 sudo snap install juju --classic
+# Install charmcraft using one of the following commands (using pip is better)
 sudo snap install charmcraft --channel beta
-python3 -m pip install charmcraft # alternative and better command to install charmcraft
+python3 -m pip install charmcraft
 ```
 
 
