@@ -8,6 +8,11 @@ import subprocess, os
 from ops.charm import CharmBase
 from ops.main import main
 from ops.framework import StoredState
+#from charms.osm.sshproxy import SSHProxyCharm
+from ops.model import (
+    ActiveStatus,
+    MaintenanceStatus,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +23,7 @@ class ModelerCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.server_relation_changed, self.get_server_ipaddr )
         #self.framework.observe(self.on.config_changed, self._on_config_changed)
         #self.framework.observe(self.on.fortune_action, self._on_fortune_action)
@@ -49,15 +55,15 @@ class ModelerCharm(CharmBase):
         wd=wd+"/backend"
         subprocess.run(["git", "checkout", "devel"], cwd=wd)
         subprocess.run(["pip3", "install", "-r", "requirements.txt"], cwd=wd)
-        #self.unit.status = ActiveStatus("ML app installed")
+        self.unit.status = ActiveStatus("ML app installed")
 
     def _on_start(self, _):
         self.unit.status = MaintenanceStatus("Starting ML app")
         wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
-        subprocess.run(["python3", "model.py". "--classifier", "--regressor", "--clustering", "-i", "5"], cwd=wd)
+        self.process = subprocess.Popen(["python3", "model.py", "--classifier", "--regressor", "--clustering", "-i", "5"], cwd=wd)
         self.unit.status = ActiveStatus("ML app started")
 
-     def get_server_ipaddr(self, event):
+    def get_server_ipaddr(self, event):
         ip = event.relation.data[event.unit].get("ip")
         wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
         #subprocess.run(["python3", "model.py", "--addhost", str(ip)+",ubuntu,ubuntu"], cwd=wd)

@@ -62,7 +62,7 @@ class MljujuCharm(CharmBase):
     def _on_start(self, _):
         self.unit.status = MaintenanceStatus("Starting ML app")
         wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
-        subprocess.run(["python3", "server.py"], cwd=wd)
+        self.process = subprocess.Popen(["python3", "server.py"], cwd=wd)
         self.unit.status = ActiveStatus("ML app started")
     
     def _provide_ipaddr(self, event):
