@@ -5,12 +5,15 @@ Install dependencies
 ```
 sudo snap install lxd
 sudo snap install microk8s --classic
+
 # Run the following 2 commands to use microk8s without sudo
 sudo usermod -a -G microk8s davidf
 sudo chown -f -R davidf ~/.kube
+
 # Reload bash terminal
 microk8s.enable dns storage # enable these two addons
 sudo snap install juju --classic
+
 # Install charmcraft using one of the following commands (using pip is better)
 sudo snap install charmcraft --channel beta
 python3 -m pip install charmcraft
@@ -33,27 +36,121 @@ juju bootstrap localhost <lxd-ctrl> # create a controller for lxd
 juju add-model <model_name> <cloud-name>
 ```
 
-Kubernetes debug
+## Using Juju
+Create, build and deploy
+```
+charmcraft init --name mljuju --project-dir mljuju-operator
+charmcraft build
+juju deploy ./mljuju.charm
+```
+
+Relations
+```
+juju add-relation <charm1> <charm2>
+```
+
+Remove data
+```
+juju remove-application
+juju remove-application --force
+
+juju remove-relation <charm1> <charm2>
+```
+
+Get ip addres (and other data) directly from relation data
+- Relation data object
+```
+```
+
+- Code to extract data
+
+```python
+def get_ip_addr(self, event):
+    if event.unit in event.realtion.data:
+        data = event.relation.data[event.unit]
+        ip_addr = data.get("ingress-address")
+        port = data.get("port")
+        host = data.get("host")
+```
+
+## Debugging
+Juju debug (recommended)
+```
+watch -c juju status --color
+
+juju debig-log --include <app> --replay
+
+juju debug-hooks <app>/0
+juju debug-hook <app> start # start is the hook name
+
+juju debug-hooks <app>/0
+$ ./dispatch
+$ vim src/charm.py # import pdb; pdb.set.trace()
+juju resolve <app>/0
+```
+
+Kubernetes sepcific debug
 ```
 microk8s.kubectl get namespaces
 microk8s.kubectl get pods
 microk8s.kubectl get all --all-namespaces
-microk8s.kubectl get pods --namespace <namespace>
+watch -c microk8s.kubectl get pods --namespace <namespace>
+
 microk8s.kubectl --namespace <namespace> exec --stdin --tty <pod-name> -- /bin/bash # attach to console
+
 microk8s.kubectl --namespace ml-test logs <pod_name>
 ```
 
-LXD debug
+LXD specific debug
 ```
-lxc list
+watch -c lxc list
 lxc exec <lxc-name> bash
 ```
 
-Create, Build and deploy
+## Juju concepts
+- A single juju controller manages multiple models
+- Each model has one or more applications (charms)
+- Each application has one or more machines
+- We use the term `operator` to refer to the charm code and `workload` to refer to the target app code
+- The following table shows the mapping between OSM/Openstack and Juju concepts
+
+|    Juju     | OSM/Openstack |
+|-------------|---------------|
+| Model       | NS            |
+| Application | VNF           |
+| Machine     | VDU           |
+
+- Two modes to work with Juju: Kubernets vs LXD
+ 
 ```
-charmcraft init --name mljuju --project-dir mljuju-operator
-charmcraft build
-juju deploy ./basic.charm
-watch -c juju status --color
-juju remove-application
++-----------------------------------------------+
+|                                               |
+|  +----------------+       +----------------+  |
+|  |    Operator    |       |    Workload    |  |
+|  |    (charm)     |       |   (app code)   |  |
+|  |                |       |                |  |
+|  |  *image of the |-------|                |  |
+|  |   configured   |       |                |  |
+|  |   workload     |       |                |  |
+|  +----------------+       +----------------+  |
+|                                               |
+|  Kubernetes                                   |
++-----------------------------------------------+
+
+
++------------------------------+
+|                              |
+|   +----------------------+   |
+|   |  +----------------+  |   |
+|   |  |    Operator    |  |   |
+|   |  |    (charm)     |  |   |
+|   |  |                |  |   |
+|   |  +----------------+  |   |
+|   |                      |   |
+|   |       Workload       |   |
+|   |      (app code)      |   |
+|   +----------------------+   |
+|                              |
+|   LXD / VNF                  |
++------------------------------+
 ```
