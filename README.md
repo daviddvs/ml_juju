@@ -154,3 +154,9 @@ lxc exec <lxc-name> bash
 |   LXD / VNF                  |
 +------------------------------+
 ```
+
+The standard deplyment of a charm in Kubernetes reqiures the deployment of two pods, one with the charm code called Operator and the associated Workload pod (as shown above). If you work with Proxy Charms is juju, you will use the following option (in `metadata.yaml`) so that only the Operator charm pod is deployed (withoud the associated workload).
+```yaml
+deployment:
+  mode: operator
+```
