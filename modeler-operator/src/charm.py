@@ -66,7 +66,7 @@ class ModelerCharm(CharmBase):
     def get_server_ipaddr(self, event):
         ip = event.relation.data[event.unit].get("ip")
         wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
-        #subprocess.run(["python3", "model.py", "--addhost", str(ip)+",ubuntu,ubuntu"], cwd=wd)
+        subprocess.run(["python3", "model.py", "--addhost", str(ip)+",root,root"], cwd=wd)
         self.unit.status = ActiveStatus(f"Added server {ip}")
 
 if __name__ == "__main__":
