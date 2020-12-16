@@ -4,6 +4,7 @@
 
 import logging
 import subprocess, os
+import time
 
 from ops.charm import CharmBase
 from ops.main import main
@@ -60,12 +61,15 @@ class ModelerCharm(CharmBase):
     def _on_start(self, _):
         self.unit.status = MaintenanceStatus("Starting ML app")
         wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
-        self.process = subprocess.Popen(["python3", "model.py", "--classifier", "--regressor", "--clustering", "-i", "5"], cwd=wd)
+        subprocess.Popen(["python3", "model.py", "--classifier", "--regressor", "--clustering", "-i", "5"], cwd=wd)
+        time.sleep(2) # wait until runs
         self.unit.status = ActiveStatus("ML app started")
 
     def get_server_ipaddr(self, event):
+        self.unit.status = MaintenanceStatus("Reading Server IP")
         ip = event.relation.data[event.unit].get("ip")
         wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
+        time.sleep(10)
         subprocess.run(["python3", "model.py", "--addhost", str(ip)+",root,root"], cwd=wd)
         self.unit.status = ActiveStatus(f"Added server {ip}")
 

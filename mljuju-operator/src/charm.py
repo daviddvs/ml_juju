@@ -5,6 +5,7 @@
 import logging
 import subprocess, os, netifaces
 from netifaces import AF_INET
+import time
 
 from ops.charm import CharmBase
 from ops.main import main
@@ -62,7 +63,9 @@ class MljujuCharm(CharmBase):
     def _on_start(self, _):
         self.unit.status = MaintenanceStatus("Starting ML app")
         wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
-        self.process = subprocess.Popen(["python3", "server.py"], cwd=wd)
+        subprocess.Popen(["python3", "server.py"], cwd=wd, encoding="utf8")
+        time.sleep(5) # wait until runs
+        #subprocess.run(["python3", "server.py"], cwd=wd)
         self.unit.status = ActiveStatus("ML app started")
     
     def _provide_ipaddr(self, event):
