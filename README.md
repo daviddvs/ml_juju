@@ -40,8 +40,11 @@ juju add-model <model_name> <cloud-name>
 Create, build and deploy
 ```
 charmcraft init --name mljuju --project-dir mljuju-operator
+python3 -m charmcraft init --name mljuju --project-dir mljuju-operator # if you installed charmcraft with python
+
 charmcraft build
 python3 -m charmcraft build # if you installed charmcraft with python
+
 juju deploy ./mljuju.charm
 ```
 
