@@ -41,6 +41,7 @@ Create, build and deploy
 ```
 charmcraft init --name mljuju --project-dir mljuju-operator
 charmcraft build
+python3 -m charmcraft build # if you installed charmcraft with python
 juju deploy ./mljuju.charm
 ```
 
@@ -51,8 +52,8 @@ juju add-relation <charm1> <charm2>
 
 Remove data
 ```
-juju remove-application
-juju remove-application --force
+juju remove-application <app>
+juju remove-application <app> --force
 
 juju remove-relation <charm1> <charm2>
 ```
@@ -78,7 +79,7 @@ Juju debug (recommended)
 ```
 watch -c juju status --color
 
-juju debig-log --include <app> --replay
+juju debug-log --include <app> --replay
 
 juju debug-hooks <app>/0
 juju debug-hook <app> start # start is the hook name
