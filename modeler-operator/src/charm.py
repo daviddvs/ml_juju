@@ -69,9 +69,9 @@ class ModelerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("Reading Server IP")
         ip = event.relation.data[event.unit].get("ip")
         wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
-        time.sleep(10)
-        subprocess.run(["python3", "model.py", "--addhost", str(ip)+",root,root"], cwd=wd)
-        self.unit.status = ActiveStatus(f"Added server {ip}")
+        if(ip != None):
+            subprocess.run(["python3", "model.py", "--addhost", str(ip)+",root,root"], cwd=wd)
+            self.unit.status = ActiveStatus(f"Added server {ip}")
 
 if __name__ == "__main__":
     main(ModelerCharm)
