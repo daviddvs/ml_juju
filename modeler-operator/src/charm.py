@@ -48,7 +48,7 @@ class ModelerCharm(CharmBase):
     def _on_install(self, _):
         self.unit.status = MaintenanceStatus("Installing dependencies")
         subprocess.run(["apt", "update"])
-        subprocess.run(["apt", "install", "-y", "git", "python3-pip"])#, "openssh-server"])
+        subprocess.run(["apt", "install", "-y", "git", "python3-pip", "sysstat"])#, "openssh-server"])
         self.unit.status = MaintenanceStatus("Installing ML app")
         repoPath="https://github.com/daviddvs/ml_nfv_ec.git"
         wd=os.path.expanduser('~')+"/ml_nfv_ec"
