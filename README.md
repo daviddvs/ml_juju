@@ -169,13 +169,13 @@ deployment:
 1. Deploy charms
 ```
 git clone https://github.com/daviddvs/ml_juju.git
-cd ml_juju/mljuju
+cd ~/ml_juju/mljuju-operator
 juju deploy ./mljuju.charm 
-cd ml_juju/balancer
+cd ~/ml_juju/balancer-operator
 juju deploy ./balancer.charm 
-cd ml_juju/modeler
-juju deploy ./modeler.charm 
-cd ml_juju/monitor
+cd ~/ml_juju/modeler-operator
+juju deploy ./modeler.charm
+cd ~/ml_juju/monitor-operator
 juju deploy ./monitor.charm 
 ```
 
