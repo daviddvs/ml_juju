@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2020 davidf
+# Copyright 2021 i2t
 # See LICENSE file for licensing details.
 
 import logging
@@ -18,7 +18,7 @@ from ops.model import (
 logger = logging.getLogger(__name__)
 
 
-class ModelerCharm(CharmBase):
+class MonitorCharm(CharmBase):
     _stored = StoredState()
 
     def __init__(self, *args):
@@ -36,42 +36,35 @@ class ModelerCharm(CharmBase):
         if current not in self._stored.things:
             logger.debug("found a new thing: %r", current)
             self._stored.things.append(current)
-
-    def _on_fortune_action(self, event):
-        fail = event.params["fail"]
-        if fail:
-            event.fail(fail)
-        else:
-            event.set_results({"fortune": "A bug in the code is worth two in the documentation."})
     '''
 
     def _on_install(self, _):
         self.unit.status = MaintenanceStatus("Installing dependencies")
         subprocess.run(["apt", "update"])
-        subprocess.run(["apt", "install", "-y", "git", "python3-pip", "sysstat"])#, "openssh-server"])
+        subprocess.run(["apt", "install", "-y", "git", "python3-pip"])#, "openssh-server"])
         self.unit.status = MaintenanceStatus("Installing ML app")
         repoPath="https://github.com/daviddvs/ml_nfv_ec.git"
         wd=os.path.expanduser('~')+"/ml_nfv_ec"
         subprocess.run(["git", "clone", repoPath, wd])
-        wd=wd+"/backend"
+        wd=wd+"/mon"
         subprocess.run(["git", "checkout", "devel"], cwd=wd)
         subprocess.run(["pip3", "install", "-r", "requirements.txt"], cwd=wd)
         self.unit.status = ActiveStatus("ML app installed")
 
     def _on_start(self, _):
         self.unit.status = MaintenanceStatus("Starting ML app")
-        wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
-        subprocess.Popen(["python3", "model.py", "--classifier", "--regressor", "--clustering", "-i", "5"], cwd=wd)
+        wd=os.path.expanduser('~')+"/ml_nfv_ec/mon"
+        subprocess.Popen(["python3", "server.py"], cwd=wd)
         time.sleep(2) # wait until runs
         self.unit.status = ActiveStatus("ML app started")
 
     def get_server_ipaddr(self, event):
         self.unit.status = MaintenanceStatus("Reading Server IP")
         ip = event.relation.data[event.unit].get("ip")
-        wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
+        wd=os.path.expanduser('~')+"/ml_nfv_ec/mon"
         if(ip != None):
-            subprocess.run(["python3", "model.py", "--addhost", str(ip)+",root,root"], cwd=wd)
+            subprocess.run(["python3", "mon2.py", "--add", str(ip)+",root,root"], cwd=wd)
             self.unit.status = ActiveStatus(f"Added server {ip}")
 
 if __name__ == "__main__":
-    main(ModelerCharm)
+    main(MonitorCharm)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2020 davidf
+# Copyright 2020 i2t
 # See LICENSE file for licensing details.
 
 import logging
@@ -18,7 +18,7 @@ from ops.model import (
 logger = logging.getLogger(__name__)
 
 
-class ModelerCharm(CharmBase):
+class BalancerCharm(CharmBase):
     _stored = StoredState()
 
     def __init__(self, *args):
@@ -28,7 +28,7 @@ class ModelerCharm(CharmBase):
         self.framework.observe(self.on.server_relation_changed, self.get_server_ipaddr )
         #self.framework.observe(self.on.config_changed, self._on_config_changed)
         #self.framework.observe(self.on.fortune_action, self._on_fortune_action)
-        #self._stored.set_default(things=[])
+        self._stored.set_default(things=[])
 
     '''
     def _on_config_changed(self, _):
@@ -46,32 +46,36 @@ class ModelerCharm(CharmBase):
     '''
 
     def _on_install(self, _):
-        self.unit.status = MaintenanceStatus("Installing dependencies")
+        self.unit.status = MaintenanceStatus("Installing Proxy")
         subprocess.run(["apt", "update"])
-        subprocess.run(["apt", "install", "-y", "git", "python3-pip", "sysstat"])#, "openssh-server"])
-        self.unit.status = MaintenanceStatus("Installing ML app")
-        repoPath="https://github.com/daviddvs/ml_nfv_ec.git"
-        wd=os.path.expanduser('~')+"/ml_nfv_ec"
-        subprocess.run(["git", "clone", repoPath, wd])
-        wd=wd+"/backend"
-        subprocess.run(["git", "checkout", "devel"], cwd=wd)
-        subprocess.run(["pip3", "install", "-r", "requirements.txt"], cwd=wd)
-        self.unit.status = ActiveStatus("ML app installed")
+        subprocess.run(["apt", "install", "-y", "git", "python3-pip", "haproxy"])
+        self.unit.status = ActiveStatus("Proxy installed")
 
     def _on_start(self, _):
-        self.unit.status = MaintenanceStatus("Starting ML app")
-        wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
-        subprocess.Popen(["python3", "model.py", "--classifier", "--regressor", "--clustering", "-i", "5"], cwd=wd)
-        time.sleep(2) # wait until runs
-        self.unit.status = ActiveStatus("ML app started")
+        self.unit.status = MaintenanceStatus("Starting Proxy")
+        lines = [
+            '',
+            'listen mlappbalance',
+            '        bind *:5000',
+            '        balance roundrobin',
+            '        option forwardfor',
+            '        option httpchk']
+        for ln in lines:
+            cmd = f'echo "{ln}" >> /etc/haproxy/haproxy.cfg'
+            subprocess.run(cmd, shell=True)
+        self.unit.status = ActiveStatus("Proxy started")
 
     def get_server_ipaddr(self, event):
         self.unit.status = MaintenanceStatus("Reading Server IP")
         ip = event.relation.data[event.unit].get("ip")
-        wd=os.path.expanduser('~')+"/ml_nfv_ec/backend"
+        
         if(ip != None):
-            subprocess.run(["python3", "model.py", "--addhost", str(ip)+",root,root"], cwd=wd)
+            ln = f'        server webserver{ip} {ip}:5000'
+            cmd = f'echo "{ln}" >> /etc/haproxy/haproxy.cfg'
+            subprocess.run(cmd, shell=True)
+            cmd = 'service haproxy restart'
+            subprocess.run(cmd, shell=True)
             self.unit.status = ActiveStatus(f"Added server {ip}")
 
 if __name__ == "__main__":
-    main(ModelerCharm)
+    main(BalancerCharm)

@@ -164,3 +164,34 @@ The standard deplyment of a charm in Kubernetes reqiures the deployment of two p
 deployment:
   mode: operator
 ```
+
+## Run ML-NFV-EC juju app
+1. Deploy charms
+```
+git clone https://github.com/daviddvs/ml_juju.git
+cd ~/ml_juju/mljuju-operator
+juju deploy ./mljuju.charm 
+cd ~/ml_juju/balancer-operator
+juju deploy ./balancer.charm 
+cd ~/ml_juju/modeler-operator
+juju deploy ./modeler.charm
+cd ~/ml_juju/monitor-operator
+juju deploy ./monitor.charm 
+```
+
+2. Add relations
+```
+juju add-relation mljuju modeler
+juju add-relation mljuju balancer
+juju add-relation mljuju monitor
+```
+
+3. Test with client script
+```
+cd
+git clone https://github.com/daviddvs/ml_nfv_ec.git
+cd ml_nfv_ec/cli
+git checkout devel # to make sure that you are using the last version
+pip3 install -r requirements.txt
+python3 rest_test_data.py -s <balancer_ip> -m <monitor_ip> -t clustering -n 1 -r 1 -T testname
+```
