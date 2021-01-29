@@ -166,16 +166,20 @@ deployment:
 ```
 
 ## Run ML-NFV-EC juju app
-1. Deploy charms
+1. Build and deploy charms
 ```
 git clone https://github.com/daviddvs/ml_juju.git
 cd ~/ml_juju/mljuju-operator
+python3 -m charmcraft build
 juju deploy ./mljuju.charm 
 cd ~/ml_juju/balancer-operator
+python3 -m charmcraft build
 juju deploy ./balancer.charm 
 cd ~/ml_juju/modeler-operator
+python3 -m charmcraft build
 juju deploy ./modeler.charm
 cd ~/ml_juju/monitor-operator
+python3 -m charmcraft build
 juju deploy ./monitor.charm 
 ```
 
